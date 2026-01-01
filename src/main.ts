@@ -3,6 +3,7 @@ import { createPinia } from "pinia";
 import Message from "vue-m-message";
 import "vue-m-message/dist/style.css";
 
+import "./axios";
 import "./style.css";
 import App from "./App.vue";
 import router from "./router";

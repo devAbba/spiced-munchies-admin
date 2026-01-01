@@ -2,7 +2,7 @@ import Message from "vue-m-message";
 import type { MessageOptions } from "vue-m-message";
 
 const defaultOptions: MessageOptions = {
-  position: "bottom-right",
+  position: "top-right",
   duration: 3000,
 };
 

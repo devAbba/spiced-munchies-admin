@@ -3,12 +3,17 @@ import { defineStore } from "pinia";
 
 import toast from "../utils/toast";
 
+interface Issue {
+  path: string[];
+  reason: string;
+}
+
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null,
     loading: false,
     errors: {
-      auth: [],
+      auth: {} as any,
     },
   }),
   getters: {
@@ -25,33 +30,61 @@ export const useAuthStore = defineStore("auth", {
       }
     },
     async login(email: string, password: string) {
-      this.errors.auth = []; // clear previous errors
+      this.errors.auth = {}; // clear previous errors
       this.loading = true;
       toast.loading("signing in...");
-
       try {
-        await axios.post("/auth/login", { email, password });
+        await axios.post("/auth/login", {
+          email,
+          password,
+          userType: "Admin",
+        });
 
-        await this.getUser();
-
-        toast.success("login successful.");
-        this.router.push("/");
+        this.router.push({ name: "TwoFactorAuth" });
       } catch (error) {
         if (error instanceof AxiosError) {
-          // handle validation errors
-          if (error.response?.status === 422) {
-            this.errors.auth = error.response.data.errors;
-          } else {
-            // handle general server errors
-            toast.error(error.response?.data);
+          switch (error.response?.status) {
+            case 422:
+              error.response.data.issues.forEach((issue: Issue) => {
+                const path = issue.path[0];
+                const key = path !== undefined ? path : "unknown";
+                this.errors.auth[key] = issue.reason;
+              });
+              break;
+            case 401:
+              this.errors.auth["password"] = error.response.data.message;
+              break;
+            default:
+              toast.error(error.response?.data.message);
           }
         } else {
-          toast.error("Something went wrong!");
+          toast.error("Something went wrong.");
         }
       } finally {
         this.loading = false;
         toast.closeLoadingToast();
       }
+    },
+    async verify2FA(token: string) {
+      this.loading = true;
+      try {
+        const result = await axios.post("/auth/verify-2fa", { token });
+        if (result.data.is2FAuthenticated) {
+          this.router.push("/");
+        }
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          console.log(error.response);
+          toast.error(error.response?.data.message);
+        } else {
+          toast.error("Something went wrong.");
+        }
+      } finally {
+        this.loading = false;
+      }
+    },
+    logout() {
+      this.user = null;
     },
   },
 });

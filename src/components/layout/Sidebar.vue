@@ -1,17 +1,30 @@
 <script setup lang="ts">
-import { useSidebarStore } from '@/stores/sidebar.store';
-import { LayoutDashboard, BarChart, Users, FileText, Settings } from 'lucide-vue-next';
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { useRoute } from "vue-router";
+import {
+  LayoutDashboard,
+  BarChart,
+  Users,
+  FileText,
+  Settings,
+} from "lucide-vue-next";
+
+import { useSidebarStore } from "@/stores/sidebar.store";
 
 const sidebarStore = useSidebarStore();
 
 const menuItems = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Analytics', url: '/analytics', icon: BarChart },
-  { title: 'Users', url: '/users', icon: Users },
-  { title: 'Reports', url: '/reports', icon: FileText },
-  { title: 'Settings', url: '/settings', icon: Settings },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Analytics", url: "/analytics", icon: BarChart },
+  { title: "Users", url: "/users", icon: Users },
+  { title: "Reports", url: "/reports", icon: FileText },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
+
+const isActiveLink = (routePath: string): boolean => {
+  const route = useRoute();
+  return route.path === routePath;
+};
 
 const windowWidth = ref(window.innerWidth);
 
@@ -28,7 +41,7 @@ const autoCollapseSidebar = () => {
 };
 
 onMounted(() => {
-  window.addEventListener('resize', updateWindowWidth);
+  window.addEventListener("resize", updateWindowWidth);
   autoCollapseSidebar();
 });
 
@@ -37,22 +50,19 @@ watch(windowWidth, () => {
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateWindowWidth);
+  window.removeEventListener("resize", updateWindowWidth);
 });
 </script>
 
 <template>
   <aside
-    class="flex flex-col bg-white border-r transition-all duration-300"
+    class="flex flex-col bg-white border-r border-gray-300 transition-all duration-300"
     :class="{
       'w-60': !sidebarStore.isCollapsed,
-      'w-16': sidebarStore.isCollapsed
+      'w-16': sidebarStore.isCollapsed,
     }"
   >
-    <div
-      class="flex justify-center py-4"
-      v-if="!sidebarStore.isCollapsed"
-    >
+    <div class="flex justify-center py-4" v-if="!sidebarStore.isCollapsed">
       <span class="text-xl">Navigation</span>
     </div>
 
@@ -60,23 +70,25 @@ onBeforeUnmount(() => {
       <ul
         :class="{
           'flex flex-col justify-start': !sidebarStore.isCollapsed,
-          'flex flex-col justify-center pt-6': sidebarStore.isCollapsed
+          'flex flex-col justify-center pt-6': sidebarStore.isCollapsed,
         }"
       >
-        <li
-          v-for="item in menuItems"
-          :key="item.title"
-          class="w-full"
-        >
+        <li v-for="item in menuItems" :key="item.title" class="w-full">
           <router-link
             :to="item.url"
             :class="{
-              'flex items-start gap-3 p-3 w-full hover:bg-gray-700 transition-all': !sidebarStore.isCollapsed,
-              'flex justify-center items-center gap-3 p-3 w-full hover:bg-gray-700 transition-all': sidebarStore.isCollapsed
+              'items-start': !sidebarStore.isCollapsed,
+              'justify-center w-full items-center': sidebarStore.isCollapsed,
+              'bg-gray-100 border-l-4 border-blue-400': isActiveLink(item.url),
             }"
+            class="flex p-3 gap-3 hover:bg-gray-100 hover:border-l-4 hover:border-blue-400 transition-all"
           >
             <component :is="item.icon" class="h-5 w-5 transition-all" />
-            <span v-if="!sidebarStore.isCollapsed" class="transition-opacity duration-300">{{ item.title }}</span>
+            <span
+              v-if="!sidebarStore.isCollapsed"
+              class="transition-opacity duration-300"
+              >{{ item.title }}</span
+            >
           </router-link>
         </li>
       </ul>
@@ -85,7 +97,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-
 aside {
   transition: width 0.3s ease;
 }
@@ -105,4 +116,3 @@ aside.w-16 nav ul li {
   height: 100%;
 }
 </style>
-
