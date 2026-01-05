@@ -32,13 +32,17 @@ export const useAuthStore = defineStore("auth", {
     async login(email: string, password: string) {
       this.errors.auth = {}; // clear previous errors
       this.loading = true;
-      toast.loading("signing in...");
+
       try {
-        await axios.post("/auth/login", {
-          email,
-          password,
-          userType: "Admin",
-        });
+        await axios.post(
+          "/auth/login",
+          {
+            email,
+            password,
+            userType: "Admin",
+          },
+          { skipFailedAuthRedirect: true }
+        );
 
         this.router.push({ name: "TwoFactorAuth" });
       } catch (error) {
