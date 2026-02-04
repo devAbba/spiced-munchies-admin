@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 import { defineStore } from "pinia";
 
 import toast from "../utils/toast";
+import { UserType } from "@/types/constants";
 
 interface Issue {
   path: string[];
@@ -39,7 +40,7 @@ export const useAuthStore = defineStore("auth", {
           {
             email,
             password,
-            userType: "Admin",
+            userType: UserType.ADMIN,
           },
           { skipFailedAuthRedirect: true }
         );
@@ -89,6 +90,14 @@ export const useAuthStore = defineStore("auth", {
     },
     logout() {
       this.user = null;
+    },
+    async forgotPassword(email: string) {
+      try {
+        await axios.post("/auth/password-reset", {
+          email,
+          userType: UserType.ADMIN,
+        });
+      } catch (error) {}
     },
   },
 });
