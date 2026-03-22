@@ -11,13 +11,19 @@ import router from "@/router";
 const authStore = useAuthStore();
 
 const email = ref<string>("");
+const message = ref<string>("");
 
 const handleNav = (): void => {
   router.push("/login");
 };
 
-const handleForgotPassword = (): void => {
-  console.log("clicked!");
+const handleForgotPassword = async () => {
+  message.value = "";
+
+  const result = await authStore.forgotPassword(email.value);
+  if (result?.success) {
+    message.value = result.message;
+  }
 };
 </script>
 
@@ -37,6 +43,13 @@ const handleForgotPassword = (): void => {
         </p>
       </div>
 
+      <div
+        v-if="message"
+        class="mb-4 px-4 py-3 rounded-md text-sm text-blue-700 bg-blue-50 border border-blue-200"
+      >
+        {{ message }}
+      </div>
+
       <form @submit.prevent="handleForgotPassword">
         <InputField
           name="email"
@@ -45,6 +58,7 @@ const handleForgotPassword = (): void => {
           :modelValue="email"
           @update:modelValue="email = $event"
           autocomplete="email"
+          :error="authStore.forgotPassErrors.email"
           class="mb-6"
         ></InputField>
 

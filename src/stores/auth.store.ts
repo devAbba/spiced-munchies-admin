@@ -15,11 +15,13 @@ export const useAuthStore = defineStore("auth", {
     loading: false,
     errors: {
       auth: {} as any,
+      forgotPass: {} as any,
     },
   }),
   getters: {
     isAuthenticated: (state) => !!state.user,
     authErrors: (state) => state.errors.auth,
+    forgotPassErrors: (state) => state.errors.forgotPass,
   },
   actions: {
     async getUser() {
@@ -93,11 +95,33 @@ export const useAuthStore = defineStore("auth", {
     },
     async forgotPassword(email: string) {
       try {
-        await axios.post("/auth/password-reset", {
+        const result = await axios.post("/auth/password-reset", {
           email,
           userType: UserType.ADMIN,
         });
-      } catch (error) {}
+
+        return {
+          success: true,
+          message: result.data.message,
+        };
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          const message = error.response?.data?.message;
+
+          if (Array.isArray(message)) {
+            message.forEach((msg) => {
+              const parts = msg.split(":");
+              if (parts.length >= 2) {
+                const field = parts[0].trim();
+                const text = parts.slice(1).join(":").trim();
+                this.errors.forgotPass[field] = text;
+              }
+            });
+          } else {
+            toast.error(error.response?.data.message);
+          }
+        }
+      }
     },
   },
 });
